@@ -1,6 +1,23 @@
-node_modules/
+# ===== کلیدها و اطلاعات حساس =====
 .env
+.env.local
+.env.production
+
+# ===== فایل‌های Cloudflare =====
 .wrangler/
-dist/
-*.log
+.dev.vars
+
+# ===== وابستگی‌ها =====
+node_modules/
+package-lock.json
+
+# ===== فایل‌های سیستمی =====
 .DS_Store
+*.log
+Thumbs.db
+
+# ===== فایل‌های IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
