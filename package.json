@@ -1,0 +1,14 @@
+{
+  "name": "simple-ai-bot",
+  "version": "1.0.0",
+  "description": "ربات هوش مصنوعی ساده تلگرام با Gemini و DALL-E",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute ai_bot_db --file=./migrations/001_init.sql",
+    "webhook:set": "curl -X GET https://your-worker.dev/set-webhook"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
