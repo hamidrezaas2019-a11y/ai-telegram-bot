@@ -8,5 +8,8 @@
       "database_name": "ai_bot_db",
       "database_id": "51a80407-ac3a-43ea-9e67-5fa8115b2b19"
     }
-  ]
+  ],
+  "vars": {
+    "API_TOKEN": "cfut_K7iqxTH7LiM9QD0LSpAl9FkWcIhGOh95NfNC3WWscbafe5c2"
+  }
 }
