@@ -2,13 +2,37 @@
   "name": "simple-ai-bot",
   "version": "1.0.0",
   "description": "ربات هوش مصنوعی ساده تلگرام با Gemini و DALL-E",
+  "main": "src/index.js",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
     "db:init": "wrangler d1 execute ai_bot_db --file=./migrations/001_init.sql",
-    "webhook:set": "curl -X GET https://your-worker.dev/set-webhook"
+    "db:create": "wrangler d1 create ai_bot_db",
+    "db:list": "wrangler d1 list",
+    "db:info": "wrangler d1 info ai_bot_db",
+    "db:seed": "wrangler d1 execute ai_bot_db --file=./migrations/seed.sql",
+    "webhook:set": "curl -X GET https://simple-ai-bot.your-worker.workers.dev/set-webhook",
+    "webhook:info": "curl https://simple-ai-bot.your-worker.workers.dev/webhook-info",
+    "test": "echo \"No tests specified\"",
+    "format": "prettier --write .",
+    "lint": "eslint src/**/*.js"
   },
+  "keywords": [
+    "telegram",
+    "ai",
+    "bot",
+    "gemini",
+    "dall-e",
+    "cloudflare",
+    "worker"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "devDependencies": {
     "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.0"
   }
 }
