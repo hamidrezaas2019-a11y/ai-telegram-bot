@@ -6,13 +6,17 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "ai-telegram-bot-db",
-      "database_id": "YOUR_DATABASE_ID"
+      "database_name": "ai_bot_db",
+      "database_id": "51a80407-ac3a-43ea-9e67-5fa8115b2b19"
     }
   ],
   "vars": {
-    "BOT_TOKEN": "توکن_ربات",
-    "OPENAI_API_KEY": "کلید_اوپن‌ای",
-    "GEMINI_API_KEY": "کلید_جمینی"
+    "BOT_TOKEN": "توکن_ربات_تتلگرام",
+    "OPENAI_API_KEY": "کلید_اوپن‌ای_آی",
+    "GEMINI_API_KEY": "کلید_جمینی",
+    "CLAUDE_API_KEY": "کلید_کلود",
+    "DEEPSEEK_API_KEY": "کلید_دیپ‌سیک",
+    "GROK_API_KEY": "کلید_گروک",
+    "DATABASE_URL": "آدرس_دیتابیس"
   }
 }
