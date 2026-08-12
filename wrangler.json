@@ -16,7 +16,12 @@
     "GEMINI_API_KEY": "کلید_جمینی",
     "CLAUDE_API_KEY": "کلید_کلود",
     "DEEPSEEK_API_KEY": "کلید_دیپ‌سیک",
-    "GROK_API_KEY": "کلید_گروک",
-    "DATABASE_URL": "آدرس_دیتابیس"
+    "GROK_API_KEY": "کلید_گروک"
+  },
+  "triggers": {
+    "crons": ["0 0 * * *"]
+  },
+  "observability": {
+    "enabled": true
   }
 }
