@@ -1,0 +1,24 @@
+name = "ai-telegram-bot"
+main = "src/index.js"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ai-telegram-bot-db"
+database_id = "YOUR_DATABASE_ID"
+
+[vars]
+BOT_TOKEN = "توکن رباتت اینجا"
+OPENAI_API_KEY = "کلید اوپن‌ای آی"
+GEMINI_API_KEY = "کلید جمینی"
+CLAUDE_API_KEY = "کلید کلود"
+DEEPSEEK_API_KEY = "کلید دیپ‌سیک"
+GROK_API_KEY = "کلید گروک"
+MIDJOURNEY_API_KEY = "کلید میدجرنی"
+RUNWAY_API_KEY = "کلید ران‌وی"
+ELEVENLABS_API_KEY = "کلید الون‌لبز"
+STABILITY_API_KEY = "کلید استیبل‌دیفیوژن"
+OPENROUTER_API_KEY = "کلید اوپن‌روتر"
+TAVILY_API_KEY = "کلید تاویلی"
+DATABASE_URL = "آدرس دیتابیس"
