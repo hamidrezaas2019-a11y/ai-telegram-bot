@@ -1,5 +1,5 @@
 // ============================================================
-// 🤖 AI SERVICE - نسخه کامل
+// 🤖 AI SERVICE - نسخه کامل با ۱۱ موتور هوش مصنوعی
 // ============================================================
 
 export const AI = {
@@ -7,43 +7,66 @@ export const AI = {
   // 📌 تنظیمات مدل‌ها
   // ============================================================
   MODELS: {
-    // چت
+    // ===== چت (۵ مدل) =====
     'gemini-2.0-flash': {
       provider: 'google',
       endpoint: 'gemini',
-      model: 'gemini-2.0-flash-exp'
+      model: 'gemini-2.0-flash-exp',
+      description: 'سریع و دقیق'
     },
     'gpt-4o-mini': {
       provider: 'openai',
       endpoint: 'chat',
-      model: 'gpt-4o-mini'
+      model: 'gpt-4o-mini',
+      description: 'سبک و سریع'
     },
     'gpt-4o': {
       provider: 'openai',
       endpoint: 'chat',
-      model: 'gpt-4o'
+      model: 'gpt-4o',
+      description: 'قدرتمند OpenAI'
     },
     'claude-3.5-sonnet': {
       provider: 'anthropic',
       endpoint: 'claude',
-      model: 'claude-3-5-sonnet-20241022'
+      model: 'claude-3-5-sonnet-20241022',
+      description: 'تحلیل عمیق'
     },
     'deepseek-v3': {
       provider: 'deepseek',
       endpoint: 'chat',
-      model: 'deepseek-chat'
+      model: 'deepseek-chat',
+      description: 'مدل چینی قدرتمند'
     },
     
-    // تصویر
+    // ===== تصویر (۲ مدل) =====
     'dall-e-3': {
       provider: 'openai',
       endpoint: 'image',
-      model: 'dall-e-3'
+      model: 'dall-e-3',
+      description: 'کیفیت بالا'
     },
     'dall-e-2': {
       provider: 'openai',
       endpoint: 'image',
-      model: 'dall-e-2'
+      model: 'dall-e-2',
+      description: 'سریع و اقتصادی'
+    },
+    
+    // ===== ویدیو (در حال توسعه) =====
+    'sora-2': {
+      provider: 'openai',
+      endpoint: 'video',
+      model: 'sora-2',
+      description: 'تولید ویدیو'
+    },
+    
+    // ===== صدا (در حال توسعه) =====
+    'elevenlabs-v3': {
+      provider: 'elevenlabs',
+      endpoint: 'voice',
+      model: 'elevenlabs-v3',
+      description: 'صدای طبیعی'
     }
   },
 
@@ -104,34 +127,6 @@ export const AI = {
       
     } catch (error) {
       console.error('AI Image Error:', error);
-      return null;
-    }
-  },
-
-  // ============================================================
-  // 🎬 تولید ویدیو
-  // ============================================================
-  async video(prompt, env, modelId = 'sora-2') {
-    // برای نسخه کامل
-    try {
-      // TODO: پیاده‌سازی تولید ویدیو
-      return '🚧 در حال توسعه';
-    } catch (error) {
-      console.error('AI Video Error:', error);
-      return null;
-    }
-  },
-
-  // ============================================================
-  // 🎵 تولید صدا
-  // ============================================================
-  async voice(text, env, modelId = 'elevenlabs-v3') {
-    // برای نسخه کامل
-    try {
-      // TODO: پیاده‌سازی تولید صدا
-      return '🚧 در حال توسعه';
-    } catch (error) {
-      console.error('AI Voice Error:', error);
       return null;
     }
   },
@@ -279,7 +274,7 @@ ${problem}
 
   // ---- Gemini (Google) ----
   async _geminiChat(prompt, env, model) {
-    const key = env.GEMINI_API_KEY;
+    const key = env.GEMINI_API_KEY || CONFIG?.GEMINI_API_KEY;
     if (!key) throw new Error('GEMINI_API_KEY not configured');
 
     const res = await fetch(
@@ -310,7 +305,7 @@ ${problem}
 
   // ---- OpenAI (Chat) ----
   async _openAIChat(prompt, env, model) {
-    const key = env.OPENAI_API_KEY;
+    const key = env.OPENAI_API_KEY || CONFIG?.OPENAI_API_KEY;
     if (!key) throw new Error('OPENAI_API_KEY not configured');
 
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -341,7 +336,7 @@ ${problem}
 
   // ---- OpenAI (Image) ----
   async _openAIImage(prompt, env, model) {
-    const key = env.OPENAI_API_KEY;
+    const key = env.OPENAI_API_KEY || CONFIG?.OPENAI_API_KEY;
     if (!key) throw new Error('OPENAI_API_KEY not configured');
 
     const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -370,7 +365,7 @@ ${problem}
 
   // ---- Claude (Anthropic) ----
   async _claudeChat(prompt, env, model) {
-    const key = env.CLAUDE_API_KEY;
+    const key = env.CLAUDE_API_KEY || CONFIG?.CLAUDE_API_KEY;
     if (!key) throw new Error('CLAUDE_API_KEY not configured');
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -400,7 +395,7 @@ ${problem}
 
   // ---- DeepSeek ----
   async _deepSeekChat(prompt, env, model) {
-    const key = env.DEEPSEEK_API_KEY;
+    const key = env.DEEPSEEK_API_KEY || CONFIG?.DEEPSEEK_API_KEY;
     if (!key) throw new Error('DEEPSEEK_API_KEY not configured');
 
     const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
