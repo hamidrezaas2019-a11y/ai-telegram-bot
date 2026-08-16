@@ -7,73 +7,48 @@ main = "src/index.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+
 # ============================================================
 # 🗄️ D1 DATABASE
 # ============================================================
+
 [[d1_databases]]
 binding = "DB"
 database_name = "ai-bot-db"
 database_id = "51a80407-ac3a-43ea-9e67-5fa8115b2b19"
 
+
 # ============================================================
 # 📦 KV STORAGE
 # ============================================================
+
 [[kv_namespaces]]
 binding = "AI_KV"
 id = "fe7bd7f271cf43469fe651bfde3a0e05"
 
+
 # ============================================================
-# 🔑 ENVIRONMENT VARIABLES
+# 🔑 NON-SECRET VARIABLES
 # ============================================================
+
 [vars]
 ENVIRONMENT = "production"
 WEBHOOK_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/webhook"
 MINIAPP_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/miniapp"
 
-# ===== توکن ربات (واقعی) =====
-BOT_TOKEN = "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c"
-
-# ===== کلیدهای API (اینارو با کلیدای واقعی خودت عوض کن) =====
-OPENAI_API_KEY = "sk-..."
-GEMINI_API_KEY = "AIzaSy..."
-CLAUDE_API_KEY = "sk-ant-..."
-DEEPSEEK_API_KEY = "sk-..."
-GROK_API_KEY = "xai-..."
-ELEVENLABS_API_KEY = "..."
 
 # ============================================================
 # ⏰ CRON TRIGGERS
 # ============================================================
+
 [triggers]
 crons = ["0 0 * * *"]
+
 
 # ============================================================
 # 📦 OBSERVABILITY
 # ============================================================
+
 [observability]
 enabled = true
 head_sampling_rate = 1.0
-
-# ============================================================
-# 🌐 ROUTES
-# ============================================================
-[[routes]]
-pattern = "ai-telegram-bot.hamidreza-as2019.workers.dev"
-zone_id = "your-zone-id"
-
-# ============================================================
-# 🚀 PRODUCTION ENVIRONMENT
-# ============================================================
-[env.production]
-vars = {
-  ENVIRONMENT = "production",
-  WEBHOOK_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/webhook",
-  MINIAPP_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/miniapp",
-  BOT_TOKEN = "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c",
-  OPENAI_API_KEY = "sk-...",
-  GEMINI_API_KEY = "AIzaSy...",
-  CLAUDE_API_KEY = "sk-ant-...",
-  DEEPSEEK_API_KEY = "sk-...",
-  GROK_API_KEY = "xai-...",
-  ELEVENLABS_API_KEY = "..."
-}
