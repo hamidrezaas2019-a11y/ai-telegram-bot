@@ -3,6 +3,7 @@
   "main": "src/index.js",
   "compatibility_date": "2024-12-18",
   "compatibility_flags": ["nodejs_compat"],
+
   "d1_databases": [
     {
       "binding": "DB",
@@ -10,17 +11,15 @@
       "database_id": "51a80407-ac3a-43ea-9e67-5fa8115b2b19"
     }
   ],
+
   "vars": {
-    "BOT_TOKEN": "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c",
-    "OPENAI_API_KEY": "sk-proj-کلید_واقعی_اوپن‌ای",
-    "GEMINI_API_KEY": "AIzaSy-کلید_واقعی_جمینی",
-    "CLAUDE_API_KEY": "sk-ant-کلید_واقعی_کلود",
-    "DEEPSEEK_API_KEY": "sk-کلید_واقعی_دیپ‌سیک",
-    "GROK_API_KEY": "xai-کلید_واقعی_گروک"
+    "ENVIRONMENT": "production"
   },
+
   "triggers": {
     "crons": ["0 0 * * *"]
   },
+
   "observability": {
     "enabled": true
   }
