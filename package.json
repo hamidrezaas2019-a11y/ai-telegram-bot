@@ -31,9 +31,9 @@
   "author": "Hamidreza",
   "license": "MIT",
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.114.17"
   },
   "dependencies": {
-    "itty-router": "^4.0.0"
+    "itty-router": "^4.2.2"
   }
 }
