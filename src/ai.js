@@ -1,428 +1,1281 @@
 // ============================================================
-// 🤖 AI SERVICE - نسخه کامل با ۱۱ موتور هوش مصنوعی
+// 🤖 NOVA AI SERVICE
+// نسخه کامل و امن برای Cloudflare Workers
+// مسیر: src/ai.js
 // ============================================================
 
-export const AI = {
-  // ============================================================
-  // 📌 تنظیمات مدل‌ها
-  // ============================================================
-  MODELS: {
-    // ===== چت (۵ مدل) =====
-    'gemini-2.0-flash': {
-      provider: 'google',
-      endpoint: 'gemini',
-      model: 'gemini-2.0-flash-exp',
-      description: 'سریع و دقیق'
-    },
-    'gpt-4o-mini': {
-      provider: 'openai',
-      endpoint: 'chat',
-      model: 'gpt-4o-mini',
-      description: 'سبک و سریع'
-    },
-    'gpt-4o': {
-      provider: 'openai',
-      endpoint: 'chat',
-      model: 'gpt-4o',
-      description: 'قدرتمند OpenAI'
-    },
-    'claude-3.5-sonnet': {
-      provider: 'anthropic',
-      endpoint: 'claude',
-      model: 'claude-3-5-sonnet-20241022',
-      description: 'تحلیل عمیق'
-    },
-    'deepseek-v3': {
-      provider: 'deepseek',
-      endpoint: 'chat',
-      model: 'deepseek-chat',
-      description: 'مدل چینی قدرتمند'
-    },
-    
-    // ===== تصویر (۲ مدل) =====
-    'dall-e-3': {
-      provider: 'openai',
-      endpoint: 'image',
-      model: 'dall-e-3',
-      description: 'کیفیت بالا'
-    },
-    'dall-e-2': {
-      provider: 'openai',
-      endpoint: 'image',
-      model: 'dall-e-2',
-      description: 'سریع و اقتصادی'
-    },
-    
-    // ===== ویدیو (در حال توسعه) =====
-    'sora-2': {
-      provider: 'openai',
-      endpoint: 'video',
-      model: 'sora-2',
-      description: 'تولید ویدیو'
-    },
-    
-    // ===== صدا (در حال توسعه) =====
-    'elevenlabs-v3': {
-      provider: 'elevenlabs',
-      endpoint: 'voice',
-      model: 'elevenlabs-v3',
-      description: 'صدای طبیعی'
-    }
-  },
+/**
+ * موتورهای پشتیبانی‌شده
+ *
+ * کلیدها باید در Cloudflare Worker Secrets باشند:
+ *
+ * OPENAI_API_KEY
+ * GEMINI_API_KEY
+ * CLAUDE_API_KEY
+ * DEEPSEEK_API_KEY
+ * GROK_API_KEY
+ * TAVILY_API_KEY
+ */
 
-  // ============================================================
-  // 💬 چت با مدل‌های مختلف
-  // ============================================================
-  async chat(prompt, env, modelId = 'gemini-2.0-flash') {
-    const model = this.MODELS[modelId];
-    if (!model) throw new Error(`❌ مدل ${modelId} یافت نشد`);
+// ============================================================
+// ⚙️ MODEL CONFIG
+// ============================================================
+
+export const AI_MODELS = {
+
+    "gemini-2.0-flash": {
+        provider: "google",
+        type: "chat",
+        model: "gemini-2.0-flash",
+        description: "Google Gemini سریع"
+    },
+
+    "gpt-4o-mini": {
+        provider: "openai",
+        type: "chat",
+        model: "gpt-4o-mini",
+        description: "OpenAI سریع و اقتصادی"
+    },
+
+    "gpt-4o": {
+        provider: "openai",
+        type: "chat",
+        model: "gpt-4o",
+        description: "OpenAI قدرتمند"
+    },
+
+    "claude-3.5-sonnet": {
+        provider: "anthropic",
+        type: "chat",
+        model: "claude-3-5-sonnet-20241022",
+        description: "Claude"
+    },
+
+    "deepseek-v3": {
+        provider: "deepseek",
+        type: "chat",
+        model: "deepseek-chat",
+        description: "DeepSeek"
+    },
+
+    "grok": {
+        provider: "xai",
+        type: "chat",
+        model: "grok-3-mini",
+        description: "xAI Grok"
+    },
+
+    "dall-e-3": {
+        provider: "openai",
+        type: "image",
+        model: "dall-e-3",
+        description: "تولید تصویر OpenAI"
+    }
+
+};
+
+
+// ============================================================
+// 🔄 MODEL ALIASES
+// ============================================================
+
+const MODEL_ALIASES = {
+
+    gemini: "gemini-2.0-flash",
+
+    google: "gemini-2.0-flash",
+
+    gpt: "gpt-4o-mini",
+
+    openai: "gpt-4o-mini",
+
+    chatgpt: "gpt-4o",
+
+    claude: "claude-3.5-sonnet",
+
+    deepseek: "deepseek-v3",
+
+    grok: "grok",
+
+    image: "dall-e-3",
+
+    dalle: "dall-e-3"
+
+};
+
+
+// ============================================================
+// 🧹 NORMALIZE MODEL
+// ============================================================
+
+export function normalizeModel(modelId) {
+
+    if (!modelId) {
+        return "gemini-2.0-flash";
+    }
+
+    const id = String(modelId)
+        .trim()
+        .toLowerCase();
+
+    return MODEL_ALIASES[id] || id;
+}
+
+
+// ============================================================
+// 🔑 API KEY HELPER
+// ============================================================
+
+function getApiKey(env, name) {
+
+    if (!env) {
+        return null;
+    }
+
+    const value = env[name];
+
+    if (
+        typeof value !== "string" ||
+        !value.trim()
+    ) {
+        return null;
+    }
+
+    return value.trim();
+}
+
+
+// ============================================================
+// 🌐 SAFE JSON
+// ============================================================
+
+async function readJson(response) {
+
+    const text = await response.text();
+
+    if (!text) {
+        return {};
+    }
 
     try {
-      let result;
-      
-      switch (model.provider) {
-        case 'google':
-          result = await this._geminiChat(prompt, env, model.model);
-          break;
-        case 'openai':
-          result = await this._openAIChat(prompt, env, model.model);
-          break;
-        case 'anthropic':
-          result = await this._claudeChat(prompt, env, model.model);
-          break;
-        case 'deepseek':
-          result = await this._deepSeekChat(prompt, env, model.model);
-          break;
-        default:
-          throw new Error(`❌ Provider ${model.provider} پشتیبانی نمی‌شود`);
-      }
-      
-      return result;
-      
-    } catch (error) {
-      console.error('AI Chat Error:', error);
-      return `❌ خطا: ${error.message}`;
+        return JSON.parse(text);
+    } catch {
+        return {
+            raw: text
+        };
     }
-  },
+}
 
-  // ============================================================
-  // 🎨 تولید تصویر
-  // ============================================================
-  async image(prompt, env, modelId = 'dall-e-3') {
-    const model = this.MODELS[modelId];
-    if (!model) throw new Error(`❌ مدل ${modelId} یافت نشد`);
 
-    try {
-      let result;
-      
-      switch (model.provider) {
-        case 'openai':
-          result = await this._openAIImage(prompt, env, model.model);
-          break;
-        default:
-          throw new Error(`❌ Provider ${model.provider} برای تصویر پشتیبانی نمی‌شود`);
-      }
-      
-      return result;
-      
-    } catch (error) {
-      console.error('AI Image Error:', error);
-      return null;
+// ============================================================
+// ❌ API ERROR
+// ============================================================
+
+function apiError(provider, response, data) {
+
+    let message =
+        data?.error?.message ||
+        data?.message ||
+        data?.error ||
+        data?.raw ||
+        `HTTP ${response.status}`;
+
+    if (typeof message !== "string") {
+        try {
+            message = JSON.stringify(message);
+        } catch {
+            message = `HTTP ${response.status}`;
+        }
     }
-  },
 
-  // ============================================================
-  // 📝 خلاصه‌سازی
-  // ============================================================
-  async summarize(text, env) {
+    return new Error(
+        `${provider} API Error (${response.status}): ${message}`
+    );
+}
+
+
+// ============================================================
+// 🧠 SYSTEM PROMPT
+// ============================================================
+
+const DEFAULT_SYSTEM_PROMPT = `
+شما Nova AI Pro هستید.
+
+یک دستیار هوش مصنوعی حرفه‌ای، دقیق و مفید هستید.
+
+قوانین:
+- به زبان کاربر پاسخ بده.
+- اگر کاربر فارسی صحبت کرد، فارسی پاسخ بده.
+- پاسخ‌ها واضح و کاربردی باشند.
+- در مسائل برنامه‌نویسی کد کامل و قابل اجرا بده.
+- اطلاعات را بدون دلیل جعل نکن.
+- اگر چیزی را نمی‌دانی، صادقانه بگو.
+`;
+
+
+// ============================================================
+// 💬 MAIN CHAT
+// ============================================================
+
+export async function chat(
+    prompt,
+    env,
+    modelId = "gemini-2.0-flash",
+    options = {}
+) {
+
+    if (!env) {
+        throw new Error("Environment is required");
+    }
+
+    if (
+        typeof prompt !== "string" ||
+        !prompt.trim()
+    ) {
+        throw new Error("Prompt is empty");
+    }
+
+    const normalized =
+        normalizeModel(modelId);
+
+    const model =
+        AI_MODELS[normalized];
+
+    if (!model) {
+        throw new Error(
+            `مدل ${modelId} پشتیبانی نمی‌شود`
+        );
+    }
+
+    if (model.type !== "chat") {
+        throw new Error(
+            `مدل ${normalized} برای chat نیست`
+        );
+    }
+
+    const system =
+        options.system ||
+        DEFAULT_SYSTEM_PROMPT;
+
+    const temperature =
+        typeof options.temperature === "number"
+            ? options.temperature
+            : 0.7;
+
+    const maxTokens =
+        Math.min(
+            Math.max(
+                Number(options.maxTokens) || 2000,
+                1
+            ),
+            8000
+        );
+
+    switch (model.provider) {
+
+        case "google":
+            return await geminiChat(
+                prompt,
+                env,
+                model.model,
+                system,
+                temperature,
+                maxTokens
+            );
+
+        case "openai":
+            return await openAIChat(
+                prompt,
+                env,
+                model.model,
+                system,
+                temperature,
+                maxTokens
+            );
+
+        case "anthropic":
+            return await claudeChat(
+                prompt,
+                env,
+                model.model,
+                system,
+                temperature,
+                maxTokens
+            );
+
+        case "deepseek":
+            return await deepSeekChat(
+                prompt,
+                env,
+                model.model,
+                system,
+                temperature,
+                maxTokens
+            );
+
+        case "xai":
+            return await grokChat(
+                prompt,
+                env,
+                model.model,
+                system,
+                temperature,
+                maxTokens
+            );
+
+        default:
+            throw new Error(
+                `Provider ${model.provider} پشتیبانی نمی‌شود`
+            );
+    }
+}
+
+
+// ============================================================
+// 🔁 CHAT WITH FALLBACK
+// ============================================================
+
+export async function generateWithFallback(
+    prompt,
+    env,
+    primaryModel = "gemini-2.0-flash",
+    fallbackModels = [
+        "gpt-4o-mini",
+        "deepseek-v3"
+    ],
+    options = {}
+) {
+
+    const models = [
+        primaryModel,
+        ...(Array.isArray(fallbackModels)
+            ? fallbackModels
+            : [])
+    ];
+
+    const tried = [];
+
+    for (const model of models) {
+
+        const normalized =
+            normalizeModel(model);
+
+        if (tried.includes(normalized)) {
+            continue;
+        }
+
+        tried.push(normalized);
+
+        try {
+
+            const result =
+                await chat(
+                    prompt,
+                    env,
+                    normalized,
+                    options
+                );
+
+            if (
+                typeof result === "string" &&
+                result.trim()
+            ) {
+                return {
+                    ok: true,
+                    model: normalized,
+                    text: result,
+                    tried
+                };
+            }
+
+        } catch (error) {
+
+            console.error(
+                `NOVA fallback ${normalized}:`,
+                error
+            );
+        }
+    }
+
+    return {
+        ok: false,
+        model: null,
+        text: "❌ در حال حاضر هیچ موتور هوش مصنوعی در دسترس نیست.",
+        tried
+    };
+}
+
+
+// ============================================================
+// 🌐 GEMINI
+// ============================================================
+
+async function geminiChat(
+    prompt,
+    env,
+    model,
+    system,
+    temperature,
+    maxTokens
+) {
+
+    const key =
+        getApiKey(env, "GEMINI_API_KEY");
+
+    if (!key) {
+        throw new Error(
+            "GEMINI_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+
+    const response =
+        await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+
+                systemInstruction: {
+                    parts: [
+                        {
+                            text: system
+                        }
+                    ]
+                },
+
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+
+                generationConfig: {
+                    temperature,
+                    maxOutputTokens: maxTokens,
+                    topP: 0.9,
+                    topK: 40
+                }
+
+            })
+        });
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "Gemini",
+            response,
+            data
+        );
+    }
+
+    const text =
+        data
+            ?.candidates?.[0]
+            ?.content?.parts
+            ?.map(part => part?.text || "")
+            .join("")
+            .trim();
+
+    if (!text) {
+        throw new Error(
+            "Gemini پاسخ خالی برگرداند"
+        );
+    }
+
+    return text;
+}
+
+
+// ============================================================
+// 🤖 OPENAI
+// ============================================================
+
+async function openAIChat(
+    prompt,
+    env,
+    model,
+    system,
+    temperature,
+    maxTokens
+) {
+
+    const key =
+        getApiKey(env, "OPENAI_API_KEY");
+
+    if (!key) {
+        throw new Error(
+            "OPENAI_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const response =
+        await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    model,
+
+                    messages: [
+                        {
+                            role: "system",
+                            content: system
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+
+                    temperature,
+                    max_tokens: maxTokens
+                })
+            }
+        );
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "OpenAI",
+            response,
+            data
+        );
+    }
+
+    const text =
+        data
+            ?.choices?.[0]
+            ?.message?.content
+            ?.trim();
+
+    if (!text) {
+        throw new Error(
+            "OpenAI پاسخ خالی برگرداند"
+        );
+    }
+
+    return text;
+}
+
+
+// ============================================================
+// 🧠 CLAUDE
+// ============================================================
+
+async function claudeChat(
+    prompt,
+    env,
+    model,
+    system,
+    temperature,
+    maxTokens
+) {
+
+    const key =
+        getApiKey(env, "CLAUDE_API_KEY");
+
+    if (!key) {
+        throw new Error(
+            "CLAUDE_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const response =
+        await fetch(
+            "https://api.anthropic.com/v1/messages",
+            {
+                method: "POST",
+
+                headers: {
+                    "x-api-key": key,
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    model,
+
+                    max_tokens:
+                        maxTokens,
+
+                    temperature,
+
+                    system,
+
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ]
+                })
+            }
+        );
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "Claude",
+            response,
+            data
+        );
+    }
+
+    const text =
+        data
+            ?.content
+            ?.filter(item =>
+                item?.type === "text"
+            )
+            ?.map(item =>
+                item.text
+            )
+            ?.join("")
+            ?.trim();
+
+    if (!text) {
+        throw new Error(
+            "Claude پاسخ خالی برگرداند"
+        );
+    }
+
+    return text;
+}
+
+
+// ============================================================
+// 🔵 DEEPSEEK
+// ============================================================
+
+async function deepSeekChat(
+    prompt,
+    env,
+    model,
+    system,
+    temperature,
+    maxTokens
+) {
+
+    const key =
+        getApiKey(
+            env,
+            "DEEPSEEK_API_KEY"
+        );
+
+    if (!key) {
+        throw new Error(
+            "DEEPSEEK_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const response =
+        await fetch(
+            "https://api.deepseek.com/chat/completions",
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    model,
+
+                    messages: [
+                        {
+                            role: "system",
+                            content: system
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+
+                    temperature,
+                    max_tokens: maxTokens
+                })
+            }
+        );
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "DeepSeek",
+            response,
+            data
+        );
+    }
+
+    const text =
+        data
+            ?.choices?.[0]
+            ?.message?.content
+            ?.trim();
+
+    if (!text) {
+        throw new Error(
+            "DeepSeek پاسخ خالی برگرداند"
+        );
+    }
+
+    return text;
+}
+
+
+// ============================================================
+// 🟣 GROK / XAI
+// ============================================================
+
+async function grokChat(
+    prompt,
+    env,
+    model,
+    system,
+    temperature,
+    maxTokens
+) {
+
+    const key =
+        getApiKey(
+            env,
+            "GROK_API_KEY"
+        );
+
+    if (!key) {
+        throw new Error(
+            "GROK_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const response =
+        await fetch(
+            "https://api.x.ai/v1/chat/completions",
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    model,
+
+                    messages: [
+                        {
+                            role: "system",
+                            content: system
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+
+                    temperature,
+                    max_tokens: maxTokens
+                })
+            }
+        );
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "Grok",
+            response,
+            data
+        );
+    }
+
+    const text =
+        data
+            ?.choices?.[0]
+            ?.message?.content
+            ?.trim();
+
+    if (!text) {
+        throw new Error(
+            "Grok پاسخ خالی برگرداند"
+        );
+    }
+
+    return text;
+}
+
+
+// ============================================================
+// 🎨 OPENAI IMAGE
+// ============================================================
+
+export async function image(
+    prompt,
+    env,
+    modelId = "dall-e-3",
+    options = {}
+) {
+
+    const normalized =
+        normalizeModel(modelId);
+
+    const model =
+        AI_MODELS[normalized];
+
+    if (!model) {
+        throw new Error(
+            `مدل تصویر ${modelId} پیدا نشد`
+        );
+    }
+
+    if (model.type !== "image") {
+        throw new Error(
+            `${normalized} مدل تصویر نیست`
+        );
+    }
+
+    const key =
+        getApiKey(
+            env,
+            "OPENAI_API_KEY"
+        );
+
+    if (!key) {
+        throw new Error(
+            "OPENAI_API_KEY تنظیم نشده است"
+        );
+    }
+
+    const response =
+        await fetch(
+            "https://api.openai.com/v1/images/generations",
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    model: model.model,
+
+                    prompt,
+
+                    n: 1,
+
+                    size:
+                        options.size ||
+                        "1024x1024",
+
+                    ...(model.model === "dall-e-3"
+                        ? {
+                            quality:
+                                options.quality ||
+                                "standard"
+                        }
+                        : {})
+
+                })
+            }
+        );
+
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "OpenAI Image",
+            response,
+            data
+        );
+    }
+
+    const item =
+        data?.data?.[0];
+
+    if (!item) {
+        throw new Error(
+            "تصویر تولید نشد"
+        );
+    }
+
+    return {
+        url: item.url || null,
+        revisedPrompt:
+            item.revised_prompt || null
+    };
+}
+
+
+// ============================================================
+// 📝 SUMMARIZE
+// ============================================================
+
+export async function summarize(
+    text,
+    env
+) {
+
+    if (!text?.trim()) {
+        throw new Error(
+            "متن برای خلاصه‌سازی خالی است"
+        );
+    }
+
     const prompt = `
-لطفاً متن زیر را خلاصه کنید:
+متن زیر را خلاصه کن.
+
+قوانین:
+- نکات مهم را حفظ کن.
+- چیزی را جعل نکن.
+- خلاصه روان و فارسی باشد.
+- حداکثر ۵۰۰ کلمه.
+
+متن:
 
 ${text}
-
-خلاصه باید:
-- شامل نکات کلیدی باشد
-- به زبان روان و ساده نوشته شود
-- حداکثر ۵۰۰ کلمه باشد
 `;
-    return await this.chat(prompt, env, 'gemini-2.0-flash');
-  },
 
-  // ============================================================
-  // 🌐 ترجمه
-  // ============================================================
-  async translate(text, targetLang = 'فارسی', env) {
+    return await chat(
+        prompt,
+        env,
+        "gemini-2.0-flash"
+    );
+}
+
+
+// ============================================================
+// 🌐 TRANSLATE
+// ============================================================
+
+export async function translate(
+    text,
+    targetLang = "فارسی",
+    env
+) {
+
+    if (!text?.trim()) {
+        throw new Error(
+            "متن برای ترجمه خالی است"
+        );
+    }
+
     const prompt = `
-متن زیر را به ${targetLang} ترجمه کنید:
+متن زیر را به ${targetLang} ترجمه کن.
+
+قوانین:
+- ترجمه طبیعی و روان باشد.
+- معنی اصلی حفظ شود.
+- قالب متن اصلی حفظ شود.
+- توضیح اضافه نده.
+
+متن:
 
 ${text}
-
-ترجمه باید:
-- روان و طبیعی باشد
-- معانی را به درستی منتقل کند
-- به سبک متن اصلی نوشته شود
 `;
-    return await this.chat(prompt, env, 'gemini-2.0-flash');
-  },
 
-  // ============================================================
-  // 💻 تولید کد
-  // ============================================================
-  async code(description, language = 'javascript', env) {
+    return await chat(
+        prompt,
+        env,
+        "gemini-2.0-flash"
+    );
+}
+
+
+// ============================================================
+// 💻 CODE GENERATION
+// ============================================================
+
+export async function generateCode(
+    description,
+    language = "javascript",
+    env
+) {
+
     const prompt = `
-کد زیر را در زبان ${language} بنویسید:
+برای درخواست زیر کد ${language} بنویس:
 
 ${description}
 
-نیازمندی‌ها:
-- کد تمیز و خواناتر باشد
-- دارای کامنت‌های توضیحی
-- بهترین روش‌های برنامه‌نویسی رعایت شود
-- در صورت امکان، مثال استفاده نیز ارائه شود
+قوانین:
+- کد کامل و قابل اجرا باشد.
+- از روش‌های استاندارد استفاده کن.
+- توضیح کوتاه و کاربردی بده.
 `;
-    return await this.chat(prompt, env, 'gpt-4o-mini');
-  },
 
-  // ============================================================
-  // 🔍 تحلیل
-  // ============================================================
-  async analyze(text, env) {
+    return await chat(
+        prompt,
+        env,
+        "gpt-4o"
+    );
+}
+
+
+// ============================================================
+// 🔍 ANALYZE
+// ============================================================
+
+export async function analyze(
+    text,
+    env
+) {
+
     const prompt = `
-متن زیر را تحلیل کنید:
+متن زیر را تحلیل کن:
 
 ${text}
 
-تحلیل باید شامل:
-1. موضوع و محتوای اصلی
-2. سبک و لحن متن
-3. نقاط قوت و ضعف
-4. پیشنهادات برای بهبود
-5. نتیجه‌گیری نهایی
+تحلیل شامل:
+1. موضوع اصلی
+2. نکات مهم
+3. نقاط قوت
+4. نقاط ضعف
+5. نتیجه‌گیری
 `;
-    return await this.chat(prompt, env, 'gemini-2.0-flash');
-  },
 
-  // ============================================================
-  // 🧠 استدلال
-  // ============================================================
-  async reason(problem, env) {
+    return await chat(
+        prompt,
+        env,
+        "gemini-2.0-flash"
+    );
+}
+
+
+// ============================================================
+// 🧠 REASON
+// ============================================================
+
+export async function reason(
+    problem,
+    env
+) {
+
     const prompt = `
-مسئله زیر را با دقت تحلیل و حل کنید:
+مسئله زیر را حل کن:
 
 ${problem}
 
-لطفاً:
-1. مسئله را دقیقاً تعریف کنید
-2. مراحل حل را گام‌به‌گام توضیح دهید
-3. راه‌حل نهایی را ارائه دهید
-4. اگر راه‌حل‌های جایگزین وجود دارد، ذکر کنید
+راه‌حل را واضح و مرحله‌به‌مرحله توضیح بده.
+در صورت وجود چند راه‌حل، بهترین گزینه را معرفی کن.
 `;
-    return await this.chat(prompt, env, 'gpt-4o');
-  },
 
-  // ============================================================
-  // 🔎 جستجو (با Tavily)
-  // ============================================================
-  async search(query, env) {
-    try {
-      const key = env.TAVILY_API_KEY;
-      if (!key) throw new Error('TAVILY_API_KEY not configured');
-
-      const response = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: query,
-          search_depth: 'advanced',
-          include_answer: true,
-          max_results: 5
-        })
-      });
-
-      const data = await response.json();
-      
-      let result = `🔎 **نتایج جستجو برای: ${query}**\n\n`;
-      
-      if (data.answer) {
-        result += `📝 **پاسخ:**\n${data.answer}\n\n`;
-      }
-      
-      if (data.results && data.results.length > 0) {
-        result += `📚 **منابع:**\n`;
-        for (const r of data.results.slice(0, 5)) {
-          result += `• [${r.title}](${r.url})\n`;
-          if (r.content) {
-            result += `  ${r.content.substring(0, 150)}${r.content.length > 150 ? '...' : ''}\n\n`;
-          }
-        }
-      }
-      
-      return result;
-      
-    } catch (error) {
-      console.error('Search Error:', error);
-      return `❌ خطا در جستجو: ${error.message}`;
-    }
-  },
-
-  // ============================================================
-  // 🔧 Private Methods (Providers)
-  // ============================================================
-
-  // ---- Gemini (Google) ----
-  async _geminiChat(prompt, env, model) {
-    const key = env.GEMINI_API_KEY || CONFIG?.GEMINI_API_KEY;
-    if (!key) throw new Error('GEMINI_API_KEY not configured');
-
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2000,
-            topP: 0.9,
-            topK: 40
-          }
-        })
-      }
+    return await chat(
+        prompt,
+        env,
+        "gpt-4o"
     );
+}
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`Gemini Error: ${error}`);
+
+// ============================================================
+// 🔎 TAVILY SEARCH
+// ============================================================
+
+export async function search(
+    query,
+    env
+) {
+
+    const key =
+        getApiKey(
+            env,
+            "TAVILY_API_KEY"
+        );
+
+    if (!key) {
+        throw new Error(
+            "TAVILY_API_KEY تنظیم نشده است"
+        );
     }
 
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '❌ پاسخی دریافت نشد';
-  },
+    const response =
+        await fetch(
+            "https://api.tavily.com/search",
+            {
+                method: "POST",
 
-  // ---- OpenAI (Chat) ----
-  async _openAIChat(prompt, env, model) {
-    const key = env.OPENAI_API_KEY || CONFIG?.OPENAI_API_KEY;
-    if (!key) throw new Error('OPENAI_API_KEY not configured');
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                    "Content-Type": "application/json"
+                },
 
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: 'شما یک دستیار هوش مصنوعی حرفه‌ای هستید.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
+                body: JSON.stringify({
+                    query,
+                    search_depth: "advanced",
+                    include_answer: true,
+                    max_results: 5
+                })
+            }
+        );
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`OpenAI Error: ${error}`);
+    const data =
+        await readJson(response);
+
+    if (!response.ok) {
+        throw apiError(
+            "Tavily",
+            response,
+            data
+        );
     }
 
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || '❌ پاسخی دریافت نشد';
-  },
+    return data;
+}
 
-  // ---- OpenAI (Image) ----
-  async _openAIImage(prompt, env, model) {
-    const key = env.OPENAI_API_KEY || CONFIG?.OPENAI_API_KEY;
-    if (!key) throw new Error('OPENAI_API_KEY not configured');
 
-    const res = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard'
-      })
-    });
+// ============================================================
+// 🧪 TEST ENGINE
+// ============================================================
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`OpenAI Image Error: ${error}`);
+export async function testEngine(
+    modelId,
+    env
+) {
+
+    const normalized =
+        normalizeModel(modelId);
+
+    const model =
+        AI_MODELS[normalized];
+
+    if (!model) {
+        return {
+            ok: false,
+            model: normalized,
+            error: "Model not found"
+        };
     }
 
-    const data = await res.json();
-    return data.data?.[0]?.url || null;
-  },
+    try {
 
-  // ---- Claude (Anthropic) ----
-  async _claudeChat(prompt, env, model) {
-    const key = env.CLAUDE_API_KEY || CONFIG?.CLAUDE_API_KEY;
-    if (!key) throw new Error('CLAUDE_API_KEY not configured');
+        if (model.type === "image") {
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        max_tokens: 2000,
-        temperature: 0.7,
-        system: 'شما یک دستیار هوش مصنوعی حرفه‌ای هستید.',
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
+            return {
+                ok: true,
+                model: normalized,
+                provider: model.provider,
+                type: model.type
+            };
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`Claude Error: ${error}`);
+        }
+
+        const result =
+            await chat(
+                "فقط بنویس: OK",
+                env,
+                normalized,
+                {
+                    maxTokens: 20
+                }
+            );
+
+        return {
+            ok: true,
+            model: normalized,
+            provider: model.provider,
+            type: model.type,
+            response: result
+        };
+
+    } catch (error) {
+
+        return {
+            ok: false,
+            model: normalized,
+            provider: model.provider,
+            type: model.type,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : String(error)
+        };
     }
+}
 
-    const data = await res.json();
-    return data.content?.[0]?.text || '❌ پاسخی دریافت نشد';
-  },
 
-  // ---- DeepSeek ----
-  async _deepSeekChat(prompt, env, model) {
-    const key = env.DEEPSEEK_API_KEY || CONFIG?.DEEPSEEK_API_KEY;
-    if (!key) throw new Error('DEEPSEEK_API_KEY not configured');
+// ============================================================
+// 📊 LIST MODELS
+// ============================================================
 
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: 'شما یک دستیار هوش مصنوعی مفید هستید.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
+export function getAvailableModels() {
 
-    if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`DeepSeek Error: ${error}`);
-    }
+    return Object.entries(
+        AI_MODELS
+    ).map(([id, model]) => ({
+        id,
+        ...model
+    }));
 
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || '❌ پاسخی دریافت نشد';
-  }
+}
+
+
+// ============================================================
+// 📤 DEFAULT AI SERVICE
+// ============================================================
+
+export const AI = {
+
+    MODELS: AI_MODELS,
+
+    chat,
+
+    image,
+
+    summarize,
+
+    translate,
+
+    generateCode,
+
+    analyze,
+
+    reason,
+
+    search,
+
+    testEngine,
+
+    generateWithFallback,
+
+    getAvailableModels,
+
+    normalizeModel
+
 };
+
+
+// ============================================================
+// 📤 EXPORTS
+// ============================================================
 
 export default AI;
