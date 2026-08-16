@@ -1,7 +1,7 @@
 {
-  "name": "simple-ai-bot",
-  "version": "1.0.0",
-  "description": "ربات هوش مصنوعی ساده تلگرام با Gemini و DALL-E",
+  "name": "ai-telegram-bot",
+  "version": "10.0.0",
+  "description": "🤖 ربات هوش مصنوعی پیشرفته تلگرام با ۱۱ موتور AI و ۱۳۶ شخصیت",
   "main": "src/index.js",
   "scripts": {
     "dev": "wrangler dev",
@@ -12,8 +12,8 @@
     "db:list": "wrangler d1 list",
     "db:info": "wrangler d1 info ai_bot_db",
     "db:seed": "wrangler d1 execute ai_bot_db --file=./migrations/seed.sql",
-    "webhook:set": "curl -X GET https://simple-ai-bot.your-worker.workers.dev/set-webhook",
-    "webhook:info": "curl https://simple-ai-bot.your-worker.workers.dev/webhook-info",
+    "webhook:set": "curl -X GET https://ai-telegram-bot.hamidreza-as2019.workers.dev/set-webhook",
+    "webhook:info": "curl https://ai-telegram-bot.hamidreza-as2019.workers.dev/webhook-info",
     "test": "echo \"No tests specified\"",
     "format": "prettier --write .",
     "lint": "eslint src/**/*.js"
@@ -25,9 +25,10 @@
     "gemini",
     "dall-e",
     "cloudflare",
-    "worker"
+    "worker",
+    "nova"
   ],
-  "author": "Your Name",
+  "author": "Hamidreza",
   "license": "MIT",
   "devDependencies": {
     "wrangler": "^3.0.0"
