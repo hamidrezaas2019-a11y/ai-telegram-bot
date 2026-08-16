@@ -11,12 +11,12 @@
     }
   ],
   "vars": {
-    "BOT_TOKEN": "توکن_ربات_تتلگرام",
-    "OPENAI_API_KEY": "کلید_اوپن‌ای_آی",
-    "GEMINI_API_KEY": "کلید_جمینی",
-    "CLAUDE_API_KEY": "کلید_کلود",
-    "DEEPSEEK_API_KEY": "کلید_دیپ‌سیک",
-    "GROK_API_KEY": "کلید_گروک"
+    "BOT_TOKEN": "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c",
+    "OPENAI_API_KEY": "sk-proj-کلید_واقعی_اوپن‌ای",
+    "GEMINI_API_KEY": "AIzaSy-کلید_واقعی_جمینی",
+    "CLAUDE_API_KEY": "sk-ant-کلید_واقعی_کلود",
+    "DEEPSEEK_API_KEY": "sk-کلید_واقعی_دیپ‌سیک",
+    "GROK_API_KEY": "xai-کلید_واقعی_گروک"
   },
   "triggers": {
     "crons": ["0 0 * * *"]
