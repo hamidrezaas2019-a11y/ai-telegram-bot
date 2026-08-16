@@ -23,26 +23,29 @@ binding = "AI_KV"
 id = "fe7bd7f271cf43469fe651bfde3a0e05"
 
 # ============================================================
-# 🔑 ENVIRONMENT VARIABLES (کلیدهای API)
+# 🔑 ENVIRONMENT VARIABLES
 # ============================================================
 [vars]
 ENVIRONMENT = "production"
 WEBHOOK_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/webhook"
 MINIAPP_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/miniapp"
 
-BOT_TOKEN = "7890123456:ABCdefGHIjklMNOpqrsTUVwxyz"
-OPENAI_API_KEY = "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"
-GEMINI_API_KEY = "AQ.Ab8RN6Jq1ydoS7lxlzo3-CsaAiny8len92cCoHt00_uaSZD9zg"
-CLAUDE_API_KEY = "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"
-DEEPSEEK_API_KEY = "sk-d0a1ec4edc8f4908a230ee702c592ef5"
-GROK_API_KEY = "xai-WehjTiovpxzys4IHkcrnSRvJUrytT9EUxMRMpWatjje7806JYTlMaO1ibouk8Uc4FxQQi7xs1k8Kry4x"
-ELEVENLABS_API_KEY = "6d190c04c56cf7b36c45a1779b3281b80798b367"
+# ===== توکن ربات (واقعی) =====
+BOT_TOKEN = "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c"
+
+# ===== کلیدهای API (اینارو با کلیدای واقعی خودت عوض کن) =====
+OPENAI_API_KEY = "sk-..."
+GEMINI_API_KEY = "AIzaSy..."
+CLAUDE_API_KEY = "sk-ant-..."
+DEEPSEEK_API_KEY = "sk-..."
+GROK_API_KEY = "xai-..."
+ELEVENLABS_API_KEY = "..."
 
 # ============================================================
-# ⏰ CRON TRIGGERS (تسک‌های زمان‌بندی شده)
+# ⏰ CRON TRIGGERS
 # ============================================================
 [triggers]
-crons = ["0 0 * * *"]  # هر روز ساعت 00:00
+crons = ["0 0 * * *"]
 
 # ============================================================
 # 📦 OBSERVABILITY
@@ -66,11 +69,11 @@ vars = {
   ENVIRONMENT = "production",
   WEBHOOK_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/webhook",
   MINIAPP_URL = "https://ai-telegram-bot.hamidreza-as2019.workers.dev/miniapp",
-  BOT_TOKEN = "7890123456:ABCdefGHIjklMNOpqrsTUVwxyz",
-  OPENAI_API_KEY = "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",
-  GEMINI_API_KEY = "AQ.Ab8RN6Jq1ydoS7lxlzo3-CsaAiny8len92cCoHt00_uaSZD9zg",
-  CLAUDE_API_KEY = "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",
-  DEEPSEEK_API_KEY = "sk-d0a1ec4edc8f4908a230ee702c592ef5",
-  GROK_API_KEY = "xai-WehjTiovpxzys4IHkcrnSRvJUrytT9EUxMRMpWatjje7806JYTlMaO1ibouk8Uc4FxQQi7xs1k8Kry4x",
-  ELEVENLABS_API_KEY = "6d190c04c56cf7b36c45a1779b3281b80798b367"
+  BOT_TOKEN = "8560975415:AAGH3SYggvoCN97fqXRzAJRD3oUTEighF7c",
+  OPENAI_API_KEY = "sk-...",
+  GEMINI_API_KEY = "AIzaSy...",
+  CLAUDE_API_KEY = "sk-ant-...",
+  DEEPSEEK_API_KEY = "sk-...",
+  GROK_API_KEY = "xai-...",
+  ELEVENLABS_API_KEY = "..."
 }
